@@ -1,13 +1,182 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/svg+xml" href="public/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>copilot-forge</title>
+    <title>Copilot Prompt Studio</title>
+    <script>
+      (function () {
+        var t = localStorage.getItem("theme");
+        if (t === "dark" || (!t && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+          document.documentElement.setAttribute("data-theme", "dark");
+        }
+      })();
+    </script>
+    <link rel="stylesheet" href="css/styles.css" />
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
+    <div class="page-bg" aria-hidden="true">
+      <div class="page-bg__gradient"></div>
+      <div class="page-bg__orb page-bg__orb--1"></div>
+      <div class="page-bg__orb page-bg__orb--2"></div>
+      <div class="page-bg__orb page-bg__orb--3"></div>
+      <div class="page-bg__grid"></div>
+    </div>
+
+    <div class="app">
+      <header class="header">
+        <div class="header-inner">
+          <a href="#" class="logo">
+            <span class="logo-icon" aria-hidden="true">
+              <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+                <rect width="36" height="36" rx="10" class="logo-icon-bg"/>
+                <path d="M11 25L16 13L21 18L26 11" stroke="#fff" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+            <span class="logo-copy">
+              <span class="logo-text">Copilot Prompt Studio</span>
+              <span class="logo-tagline">GitHub Copilot Assistant</span>
+            </span>
+          </a>
+          <nav class="nav" aria-label="Page sections">
+            <a href="#section-input" class="nav-link">Input</a>
+            <a href="#section-output" class="nav-link">Output</a>
+            <a href="#section-model" class="nav-link">Model</a>
+          </nav>
+          <div class="header-tools">
+            <button type="button" id="theme-toggle" class="theme-toggle" aria-label="Switch to dark mode">
+              <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+                <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+              </svg>
+              <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+                <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <main class="main">
+        <section class="page-intro reveal">
+          <p class="page-eyebrow">Internal engineering tool</p>
+          <h1 class="page-title">Structure prompts. Choose the right Copilot model.</h1>
+          <p class="page-lead">
+            Paste your ticket or question below. OpenAI powers real prompt optimization — use your company API key for best results. Works offline with basic formatting if no key is set.
+          </p>
+        </section>
+
+        <section id="section-input" class="card reveal">
+          <div class="card-header">
+            <span class="step-badge">Step 1</span>
+            <div>
+              <h2 class="card-title">Your prompt</h2>
+              <p class="card-subtitle">Bug report, ticket, or engineering question</p>
+            </div>
+          </div>
+          <div class="card-body">
+            <label class="sr-only" for="prompt-input">Prompt description</label>
+            <textarea
+              id="prompt-input"
+              class="input-textarea"
+              rows="8"
+              placeholder="Describe the issue: steps to reproduce, expected vs actual behavior, error logs…"
+            ></textarea>
+            <p class="input-hint">Include reproduction steps and any stack traces for better results.</p>
+
+            <div class="api-settings reveal reveal-delay-1">
+              <p class="api-settings-title">OpenAI API (recommended)</p>
+              <p class="api-settings-desc">Uses <strong>gpt-4o-mini</strong> (text) and <strong>gpt-4o</strong> (screenshots). Run <code>npm run dev</code> with <code>.env</code> for a server key, or paste a key below.</p>
+              <p id="server-status" class="server-status" hidden></p>
+              <div class="api-fields">
+                <div class="api-field">
+                  <label class="upload-label" for="api-key">API key</label>
+                  <input id="api-key" class="api-input" type="password" placeholder="sk-…" autocomplete="off" />
+                </div>
+                <div class="api-field api-field--wide">
+                  <label class="upload-label" for="api-base">API base URL <span class="muted">(optional, for Azure OpenAI)</span></label>
+                  <input id="api-base" class="api-input" type="url" placeholder="https://api.openai.com/v1" />
+                </div>
+              </div>
+            </div>
+
+            <div class="input-row">
+              <div class="info-box reveal reveal-delay-2">
+                <p class="info-box-title">AI-powered enhancement</p>
+                <p class="info-box-text">With an API key, OpenAI rewrites your prompt for Copilot and picks the best model. Without a key, basic local formatting is used.</p>
+              </div>
+              <div class="upload-box reveal reveal-delay-3">
+                <label class="upload-label">Screenshot <span class="muted">(optional)</span></label>
+                <div id="drop-zone" class="drop-zone">
+                  <input id="file-input" type="file" accept="image/*" hidden />
+                  <div id="drop-preview" class="drop-preview" hidden>
+                    <img alt="" />
+                    <span id="img-name" class="drop-filename"></span>
+                    <button type="button" id="btn-remove-img" class="link-btn">Remove</button>
+                  </div>
+                  <div id="drop-empty" class="drop-empty">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                      <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+                    </svg>
+                    <span>Upload image</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div id="error-msg" class="message message--error" hidden role="alert"></div>
+
+            <div class="card-actions">
+              <button type="button" id="btn-generate" class="btn btn-primary">Enhance prompt</button>
+            </div>
+          </div>
+        </section>
+
+        <div id="result-section" class="results" hidden aria-live="polite">
+          <div id="stats-row" class="stats-row reveal"></div>
+
+          <section id="section-output" class="card reveal">
+            <div class="card-header card-header--split">
+              <div class="card-header-start">
+                <span class="step-badge">Step 2</span>
+                <div>
+                  <h2 class="card-title">Enhanced prompt</h2>
+                  <p class="card-subtitle">Copy into GitHub Copilot Chat</p>
+                </div>
+              </div>
+              <button type="button" id="btn-copy" class="btn btn-secondary">Copy</button>
+            </div>
+            <div class="card-body card-body--tight">
+              <pre id="prompt-output" class="output-text"></pre>
+              <div id="screenshot-note" class="message message--info" hidden>
+                Attach your screenshot in Copilot Chat — the prompt references your image.
+              </div>
+            </div>
+            <div id="steps-row" class="card-footer"></div>
+          </section>
+
+          <section id="section-model" class="card reveal">
+            <div class="card-header">
+              <span class="step-badge">Step 3</span>
+              <div>
+                <h2 class="card-title">Recommended model</h2>
+                <p class="card-subtitle">Select this model in Copilot Chat</p>
+              </div>
+            </div>
+            <div class="card-body">
+              <div id="rec-model-card"></div>
+              <p class="list-heading">All available models</p>
+              <div id="all-models" class="model-list"></div>
+            </div>
+          </section>
+        </div>
+      </main>
+
+      <footer class="footer">
+        <p>Copilot Prompt Studio · Internal engineering tool · © 2026</p>
+      </footer>
+    </div>
+
+    <script type="module" src="js/app.js"></script>
   </body>
 </html>
